@@ -17,9 +17,12 @@ namespace BrowserSelect
         public string name;
         public string exec;
         public string icon;
+        public int order;
         public string additionalArgs = "";
 
         public string Identifier => $"{exec} {additionalArgs}";
+        public string Name { get { return name; } set { name = value; } }
+        public int Order { get { return order; } set { order = value; } }
 
         public Image string2Icon()
         {
@@ -29,8 +32,8 @@ namespace BrowserSelect
             {
                 newIcon = new Bitmap(stream);
             }
-          
-            return newIcon; 
+
+            return newIcon;
         }
 
         public string private_arg
@@ -82,7 +85,7 @@ namespace BrowserSelect
 
         public static List<Browser> find(bool update = false)
         {
-          
+
             List<Browser> browsers = new List<Browser>();
             if (Properties.Settings.Default.BrowserList != "" && !update)
             {
@@ -130,16 +133,25 @@ namespace BrowserSelect
 
                 //check for edge chromium profiles
                 AddChromeProfiles(browsers, "Microsoft Edge", @"Microsoft\Edge\User Data", "Edge Profile.ico");
-                
+
                 //Check for Chrome Profiles
                 AddChromeProfiles(browsers, "Google Chrome", @"Google\Chrome\User Data", "Google Profile.ico");
 
-                System.Diagnostics.Debug.WriteLine(JsonConvert.SerializeObject(browsers));
+                for (var i = 1; i <= browsers.Count; i++)
+                    browsers[i - 1].order = i;
+
                 Properties.Settings.Default.BrowserList = JsonConvert.SerializeObject(browsers);
+                System.Diagnostics.Debug.WriteLine(Properties.Settings.Default.BrowserList);
                 Properties.Settings.Default.Save();
             }
 
             return browsers;
+        }
+
+        public static void Save(IEnumerable<Browser> browsers)
+        {
+            Properties.Settings.Default.BrowserList = JsonConvert.SerializeObject(browsers);
+            Properties.Settings.Default.Save();
         }
 
         private static void AddChromeProfiles(List<Browser> browsers, string BrowserName, string VendorDataFolder, string IconFilename)
@@ -173,7 +185,7 @@ namespace BrowserSelect
             dynamic ProfilePreferences = JObject.Parse(File.ReadAllText(FullProfilePath + @"\Preferences"));
             return ProfilePreferences.profile.name;
         }
-        
+
         private static List<string> FindChromeProfiles(string ChromeUserDataDir, string IconFilename)
         {
             List<string> Profiles = new List<string>();

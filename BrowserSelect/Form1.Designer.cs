@@ -36,21 +36,24 @@
             this.btn_help.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btn_help.FlatAppearance.BorderSize = 0;
             this.btn_help.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_help.Location = new System.Drawing.Point(97, 155);
+            this.btn_help.Location = new System.Drawing.Point(146, 232);
+            this.btn_help.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.btn_help.Name = "btn_help";
-            this.btn_help.Size = new System.Drawing.Size(25, 25);
+            this.btn_help.Size = new System.Drawing.Size(38, 38);
             this.btn_help.TabIndex = 0;
             this.btn_help.UseVisualStyleBackColor = true;
             this.btn_help.Click += new System.EventHandler(this.btn_help_Click);
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(144F, 144F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(124, 181);
+            this.ClientSize = new System.Drawing.Size(186, 272);
             this.Controls.Add(this.btn_help);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "Form1";
             this.Text = "Browser Select";
             this.Load += new System.EventHandler(this.Form1_Load);

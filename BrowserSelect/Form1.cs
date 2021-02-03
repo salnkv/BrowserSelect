@@ -24,7 +24,7 @@ namespace BrowserSelect
         public void updateBrowsers()
         {
             SuspendLayout();
-            browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).ToList();
+            browsers = BrowserFinder.find().Where(b => !Settings.Default.HideBrowsers.Contains(b.Identifier)).OrderBy(b => b.Order).ToList();
             int i = 0;
             int width = 0;
             for (int k = Controls.Count - 1; k >= 0; k--)

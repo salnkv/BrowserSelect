@@ -1,27 +1,64 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using BrowserSelect.Properties;
+using BrowserSelect.ViewModels;
 using Microsoft.Win32;
 
 namespace BrowserSelect
 {
     public partial class frm_settings : Form
     {
-
         public Form1 mainForm;
+
+        private BindingList<SettingsBrowserViewModel> browserListData = new BindingList<SettingsBrowserViewModel>();
+        private List<int> orderItemsList = new List<int>();
+        private List<AutoMatchRule> rules = new List<AutoMatchRule>();
+        private List<Browser> browsers;
 
         public frm_settings(Form mainForm)
         {
             this.mainForm = (Form1)mainForm;
             InitializeComponent();
+            Init();
         }
 
-        private List<AutoMatchRule> rules = new List<AutoMatchRule>();
+        private void Init()
+        {
+            browsers = BrowserFinder.find();
+            dgvBrowsers.AutoGenerateColumns = false;
+            PopulateBrowserList();
+        }
+
+        private void PopulateBrowserList()
+        {
+            // browser list
+            browserListData.Clear();
+            foreach (var b in browsers)
+            {
+                var browserVM = new SettingsBrowserViewModel
+                {
+                    Id = b.Identifier,
+                    Name = b.Name,
+                    Order = b.Order,
+                    IsEnabled = !Settings.Default.HideBrowsers.Contains(b.Identifier)
+                };
+                browserListData.Add(browserVM);
+            }
+            dgvBrowsers.DataSource = browserListData;
+
+            // order combobox list
+            orderItemsList.Clear();
+            for (var i = 1; i <= browserListData.Count; i++)
+                orderItemsList.Add(i);
+            colOrder.DataSource = orderItemsList;
+        }
+
         private void frm_settings_Load(object sender, EventArgs e)
         {
             //check if browser select is the default browser or not
@@ -37,14 +74,10 @@ namespace BrowserSelect
             }
 
             //populate list of browsers for Rule List ComboBox
-            var browsers = BrowserFinder.find();
             var c = ((DataGridViewComboBoxColumn)gv_filters.Columns["browser"]);
-
             foreach (Browser b in browsers)
-            {
-                browser_filter.Items.Add(b, !Settings.Default.HideBrowsers.Contains(b.Identifier));
                 c.Items.Add(b.ToString());
-            }
+
             // add browser select to the list
             c.Items.Add("display BrowserSelect");
 
@@ -76,20 +109,6 @@ namespace BrowserSelect
             }
 
             btn_setdefault.Enabled = false;
-        }
-
-        private void browser_filter_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            //Save changes to the BrowserFilter List
-            if (e.NewValue == CheckState.Checked)
-            {
-                Settings.Default.HideBrowsers.Remove(((Browser)browser_filter.Items[e.Index]).Identifier);
-            }
-            else
-            {
-                Settings.Default.HideBrowsers.Add(((Browser)browser_filter.Items[e.Index]).Identifier);
-            }
-            Settings.Default.Save();
         }
 
         private void frm_settings_FormClosing(object sender, FormClosingEventArgs e)
@@ -214,24 +233,39 @@ namespace BrowserSelect
 
         private void btn_refresh_Click(object sender, EventArgs e)
         {
-            List<Browser> browsers = BrowserFinder.find(true);
-            var c = ((DataGridViewComboBoxColumn)gv_filters.Columns["browser"]);
+            browsers = BrowserFinder.find(true);
+            var c = (DataGridViewComboBoxColumn)gv_filters.Columns["browser"];
             c.Items.Clear();
-            browser_filter.Items.Clear();
             foreach (Browser b in browsers)
-            {
-                browser_filter.Items.Add(b, !Settings.Default.HideBrowsers.Contains(b.Identifier));
                 c.Items.Add(b.ToString());
-            }
             // add browser select to the list
             c.Items.Add("display BrowserSelect");
 
-            this.mainForm.updateBrowsers();
+            PopulateBrowserList();
+
+            mainForm.updateBrowsers();
         }
 
         private void gv_filters_DataError(object sender, DataGridViewDataErrorEventArgs e)
         {
             // to prevent System.ArgumentException: DataGridViewComboBoxCell value is not valid MessageBoxes
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            foreach (var b in browserListData)
+            {
+                var browser = browsers.Find(o => o.Identifier == b.Id);
+                if (browser != null)
+                    browser.Order = b.Order;
+
+                if (b.IsEnabled && Settings.Default.HideBrowsers.Contains(b.Id))
+                    Settings.Default.HideBrowsers.Remove(b.Id);
+                else if (!b.IsEnabled && !Settings.Default.HideBrowsers.Contains(b.Id))
+                    Settings.Default.HideBrowsers.Add(b.Id);
+            }
+            BrowserFinder.Save(browsers);
+            mainForm.updateBrowsers();
         }
     }
     class AutoMatchRule
